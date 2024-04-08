@@ -1,8 +1,9 @@
 // Template based on bethree.cpp STK tutorial program.
 // Make a new project based on this ane edit to taste.
 
-#include "BeeThree.h"
 #include "RtAudio.h"
+#include "Delay.h"
+#include "P2Flute.h"
 using namespace stk;
 
 // The TickData structure holds all the class instances and data that
@@ -16,7 +17,7 @@ struct TickData {
 
   // Default constructor.
   TickData()
-    : instrument(0), scaler(1.0), counter(0), done( false ) {}
+      : instrument(0), scaler(1.0), counter(0), done(false) {}
 };
 
 // This tick() function handles sample computation only.  It will be
@@ -30,10 +31,11 @@ int tick( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
 
   for ( unsigned int i=0; i<nBufferFrames; i++ ) {
     *samples++ = data->instrument->tick();
-    if ( ++data->counter % 2000 == 0 ) {
+    ++data->counter;
+    /*if ( ++data->counter % 2000 == 0 ) {
       data->scaler += 0.025;
       data->instrument->setFrequency( data->frequency * data->scaler );
-    }
+    }*/
   }
 
   if ( data->counter > 80000 )
@@ -65,14 +67,13 @@ int main()
   }
 
   try {
-    // Define and load the BeeThree instrument
-    data.instrument = new BeeThree();
+    data.instrument = new P2Flute();
   }
-  catch ( StkError & ) {
+  catch ( StkError &error ) {
     goto cleanup;
   }
 
-  data.frequency = 220.0;
+  data.frequency = 440.0;
   data.instrument->noteOn( data.frequency, 0.5 );
 
   try {
