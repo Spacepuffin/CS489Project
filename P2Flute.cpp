@@ -26,12 +26,14 @@ namespace stk {
         jetRatio_ = 0.32;
 
         maxPressure_ = 0.0;
+        myfile_.open("out.txt");
         this->clear();
         this->setFrequency(220.0);
     }
 
     P2Flute::~P2Flute(void)
     {
+        myfile_.close();
     }
 
     void P2Flute::clear(void)

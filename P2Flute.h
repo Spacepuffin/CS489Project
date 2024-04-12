@@ -9,6 +9,8 @@
 #include "Noise.h"
 #include "ADSR.h"
 #include "SineWave.h"
+#include <iostream>
+#include <fstream>
 
 namespace stk {
 	class P2Flute : public Instrmnt {
@@ -32,7 +34,7 @@ namespace stk {
 		StkFrames& tick(StkFrames& frames, unsigned int channel = 0);
 
 	protected:
-		stk::DelayL   jetDelay_;
+		DelayL   jetDelay_;
 		DelayL   boreDelay_;
 		JetTable jetTable_;
 		OnePole  filter_;
@@ -40,6 +42,7 @@ namespace stk {
 		Noise    noise_;
 		ADSR     adsr_;
 		SineWave vibrato_;
+		std::ofstream myfile_;
 
 		StkFloat lastFrequency_;
 		StkFloat maxPressure_;
@@ -66,7 +69,18 @@ namespace stk {
 		pressureDiff = breathPressure - (jetReflection_ * temp);
 		pressureDiff = jetDelay_.tick(pressureDiff);
 		//pressureDiff = jetTable_.tick( pressureDiff ) + (endReflection_ * temp);
-		pressureDiff = dcBlock_.tick(jetTable_.tick(pressureDiff)) + (endReflection_ * temp); // moved the DC blocker to after the jet non-linearity (GPS, 29 Jan. 2020)
+		//pressureDiff = - 0.5 * sin(3.1415926535 * pressureDiff);
+		//pressureDiff = 0.2 -0.5 * tanh(pressureDiff);
+
+		//myfile_ << pressureDiff << std::endl;
+		
+		StkFloat a = 3.0;
+		pressureDiff = 1.0/3.0 * tanh((pressureDiff - ((a + 0.5) / a)) * 2 * a) + 0.5;
+		//pressureDiff = 3 * pressureDiff - 3;
+		if (pressureDiff > 1.0) pressureDiff = 1.0;
+		if (pressureDiff < -1.0) pressureDiff = -1.0;
+		
+		pressureDiff = dcBlock_.tick(pressureDiff) + (endReflection_ * temp); // moved the DC blocker to after the jet non-linearity (GPS, 29 Jan. 2020)
 		lastFrame_[0] = (StkFloat)0.3 * boreDelay_.tick(pressureDiff);
 
 		lastFrame_[0] *= outputGain_;

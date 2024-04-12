@@ -4,6 +4,9 @@
 #include "RtAudio.h"
 #include "Delay.h"
 #include "P2Flute.h"
+#include "FileLoop.h"
+#include "FileWvOut.h"
+
 using namespace stk;
 
 // The TickData structure holds all the class instances and data that
@@ -14,6 +17,7 @@ struct TickData {
   StkFloat scaler;
   long counter;
   bool done;
+  FileWvOut *output;
 
   // Default constructor.
   TickData()
@@ -31,6 +35,7 @@ int tick( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
 
   for ( unsigned int i=0; i<nBufferFrames; i++ ) {
     *samples++ = data->instrument->tick();
+    data->output->tick(*samples);
     ++data->counter;
     /*if ( ++data->counter % 2000 == 0 ) {
       data->scaler += 0.025;
@@ -52,6 +57,9 @@ int main()
 
   TickData data;
   RtAudio dac;
+  FileWvOut output;
+  output.openFile("output.wav", 1, FileWrite::FILE_WAV, Stk::STK_FLOAT32);
+  data.output = &output;
 
   // Figure out how many bytes in an StkFloat and setup the RtAudio stream.
   RtAudio::StreamParameters parameters;
